@@ -1,45 +1,66 @@
 # Research Introduction Slides
+
 > You can use AI to translate or explain this document and the rest of the project's documentation in your preferred language.
 >
 > 你可以使用 AI 将本文档和本项目的其他文档翻译成你偏好的语言，或为你解读其中的内容。
 
-A six-slide English introduction to Yukuan Lu's research in world models and vision, prepared for Fall 2027 PhD advisor conversations.
+An English introduction to Yukuan Lu's research in world models and vision, prepared for Fall 2027 PhD advisor conversations.
 
-The presentation is a single offline-ready HTML file with embedded fonts, keyboard navigation, and inline text editing. Every slide uses a fixed 16:9 canvas that scales uniformly on desktop and mobile.
+The source is split into one readable HTML file per slide, shared CSS, separate browser scripts, and local fonts. A small Python builder produces a single offline-ready HTML file. The existing 16:9 layout, keyboard navigation, and browser text editing are preserved.
 
 ![Slide overview](docs/preview.png)
 
-## Run locally
+## Start editing
 
-Open `src/index.html` in a browser, or serve it with Python 3:
+Requires Python 3.10+. Node.js and npm are optional for formatting.
 
 ```bash
-python -m http.server 8000 --bind 127.0.0.1 --directory src
+npm install
+npm run dev
 ```
 
-Then open [localhost:8000](http://localhost:8000). No application dependencies or build step are required.
+Open [localhost:8000](http://localhost:8000), edit a source file, save, and refresh. Without Node, run `python3 scripts/deck.py dev`. Use `--port 8001` if the default port is occupied.
 
-## Present and edit
+| What to change                         | File                          |
+| -------------------------------------- | ----------------------------- |
+| Slide text and markup                  | `src/slides/*.html`           |
+| Slide order, page list, document title | `src/deck.json`               |
+| Colors, typography, layouts, animation | `src/styles/deck.css`         |
+| Navigation and scaling                 | `src/scripts/presentation.js` |
+| Browser text editing and export        | `src/scripts/editor.js`       |
+| Document shell and toolbar             | `src/index.html`              |
 
-- Next/previous: arrow keys, Space, Page Up/Down, mouse wheel, or horizontal swipe.
+See [editing workflow](docs/workflows.md) for adding slides, browser drafts, and sharing. `src/index.html` is a template; preview it using the development server.
+
+## Build and share
+
+```bash
+npm run build
+# Or: python3 scripts/deck.py build
+```
+
+Open or share `dist/index.html`. Fonts, styles, and scripts are embedded, so it works offline. Do not edit generated output.
+
+## Present
+
+- Next/previous: arrows, Space, Page Up/Down, mouse wheel, or swipe.
 - First/last: Home / End.
-- Edit: press E or hover over the top-left corner; click text to change it.
-- Finish editing: press Escape or click Done.
-- Download an updated HTML file: Ctrl+S / Cmd+S or Save HTML.
+- Browser text editing: E; finish with Escape.
+- Download a portable edited copy: Ctrl+S / Cmd+S or Save HTML.
 
-Edits are saved in browser local storage for the current URL. To commit changes, download the edited HTML and replace `src/index.html`; browser edits do not modify the repository automatically.
+Browser drafts do not update repository files. Make permanent edits in `src/slides/`.
 
-Colors and font families are in `:root`; entrance animations use `.reveal`. See [design notes](docs/design.md).
-
-## Test
+## Format and test
 
 ```bash
-python -m pip install -r requirements-dev.txt
-python -m playwright install chromium
-python -m unittest discover -s tests -v
+npm run format
+python3 -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python -m playwright install chromium
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs these checks on pushes and pull requests.
+GitHub Actions checks formatting, builds, and tests navigation, offline layout, text overflow, draft persistence, and HTML export on pushes and pull requests.
 
 ## Research reference
 

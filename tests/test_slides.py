@@ -1,10 +1,16 @@
 """Browser-level regression checks, using unittest as the test runner."""
 from pathlib import Path
+import json
 import tempfile
 import unittest
 from playwright.sync_api import sync_playwright
 
-DECK = Path(__file__).resolve().parents[1] / 'src' / 'index.html'
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+from deck import build
+
+DECK = build()
+SLIDE_COUNT = len(json.loads((DECK.parents[1] / 'src/deck.json').read_text())['slides'])
 
 
 class PresentationTests(unittest.TestCase):
@@ -31,10 +37,10 @@ class PresentationTests(unittest.TestCase):
         self.assertEqual(self.errors, [])
 
     def test_keyboard_navigation_and_bounds(self):
-        self.assertEqual(self.page.locator('.slide').count(), 6)
+        self.assertEqual(self.page.locator('.slide').count(), SLIDE_COUNT)
         for key, expected in [('ArrowRight', 1), ('Space', 2), ('Home', 0),
-                              ('ArrowLeft', 0), ('End', 5), ('PageDown', 5),
-                              ('PageUp', 4)]:
+                              ('ArrowLeft', 0), ('End', SLIDE_COUNT - 1), ('PageDown', SLIDE_COUNT - 1),
+                              ('PageUp', SLIDE_COUNT - 2)]:
             self.page.keyboard.press(key)
             self.assertEqual(self.page.evaluate('presentation.currentSlide'), expected)
             self.assertEqual(self.page.locator('.slide:not([inert])').count(), 1)
@@ -46,7 +52,7 @@ class PresentationTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate("document.fonts.check('200 40px Jost')"))
         for width, height in [(1280, 720), (390, 844)]:
             self.page.set_viewport_size({'width': width, 'height': height})
-            for i in range(6):
+            for i in range(SLIDE_COUNT):
                 self.page.evaluate('(i) => presentation.showSlide(i)', i)
                 rect = self.page.locator('.deck-stage').bounding_box()
                 self.assertAlmostEqual(rect['width'] / rect['height'], 16 / 9, places=3)
@@ -68,14 +74,14 @@ class PresentationTests(unittest.TestCase):
         text = self.page.locator('.slide.active [data-edit]').first
         text.fill('Edited title')
         self.page.reload()
-        self.assertEqual(text.inner_text(), 'Edited title')
+        self.assertEqual(text.text_content(), 'Edited title')
         with self.page.expect_download() as download:
             self.page.keyboard.press('Control+s')
         with tempfile.TemporaryDirectory() as tmp:
             exported = Path(tmp) / 'export.html'
             download.value.save_as(exported)
             self.page.goto(exported.as_uri())
-            self.assertEqual(self.page.locator('.slide.active [data-edit]').first.inner_text(), 'Edited title')
+            self.assertEqual(self.page.locator('.slide.active [data-edit]').first.text_content(), 'Edited title')
             self.assertFalse(self.page.locator('body').evaluate("el => el.classList.contains('editing')"))
             self.page.keyboard.press('ArrowRight')
             self.assertEqual(self.page.evaluate('presentation.currentSlide'), 1)

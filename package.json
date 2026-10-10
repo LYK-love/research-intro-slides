@@ -1,0 +1,14 @@
+{
+  "name": "research-intro-slides",
+  "private": true,
+  "scripts": {
+    "dev": "python3 scripts/deck.py dev",
+    "build": "python3 scripts/deck.py build",
+    "format": "prettier --write src docs/*.md README.md package.json",
+    "format:check": "prettier --check src docs/*.md README.md package.json",
+    "test": "python3 -m unittest discover -s tests -v"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2"
+  }
+}

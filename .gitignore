@@ -6,3 +6,6 @@ __pycache__/
 .env
 .env.*
 test-results/
+
+node_modules/
+dist/
